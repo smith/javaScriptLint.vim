@@ -1,15 +1,20 @@
 " File:         javascriptLint.vim
 " Author:       Joe Stelmach (joe@zenbe.com)
-" Version:      0.1
-" Description:  javascriptLint.vim allows the JavaScript Lint (jsl) program 
-"               from http://www.javascriptlint.com/ to be tightly integrated 
-"               with vim.  The contents of a javascript file will be passed 
-"               through the jsl program after the file's buffer is saved.  
-"               Any lint warnings will be placed in the quickfix window.  
-"               JavaScript Lint must be installed on your system for this 
+" Version:      0.3a1
+" Description:  javascriptLint.vim allows the JavaScript Lint (jsl) program
+"               from http://www.javascriptlint.com/ to be tightly integrated
+"               with vim.  The contents of a javascript file will be passed
+"               through the jsl program after the file's buffer is saved.
+"               Any lint warnings will be placed in the quickfix window.
+"               JavaScript Lint must be installed on your system for this
 "               plugin to work properly.  This page should get you started:
 "               http://www.javascriptlint.com/docs/index.htm
-" Last Modified: May 5, 2009
+"
+"               Modifications were made by smith (nlloyds@gmail.com) to make
+"               the program called from a command instead of upon saving.
+"               Other minor modifcations were also made
+"
+" Last Modified: December 28, 2009
 
 if !exists("jslint_command")
   let jslint_command = 'jsl'
@@ -24,12 +29,18 @@ if !exists("jslint_highlight_color")
 endif
 
 " set up auto commands
-autocmd BufWritePost,FileWritePost *.js call JavascriptLint()
-autocmd BufWinLeave * call s:MaybeClearCursorLineColor()
+" Commented out by smith
+"autocmd BufWritePost,FileWritePost *.js call JavascriptLint()
+"autocmd BufWinLeave * call s:MaybeClearCursorLineColor()
+
+" set up commands
+command! JavaScriptLint call JavascriptLint()
+command! JavaScriptLintClear call s:ClearCursorLineColor()
 
 " Runs the current file through javascript lint and 
 " opens a quickfix window with any warnings
-function JavascriptLint() 
+" TODO: Make this work with ranges
+function! JavascriptLint() 
   " run javascript lint on the current file
   let current_file = shellescape(expand('%:p'))
   let cmd_output = system(g:jslint_command . ' ' . g:jslint_command_options . ' ' . current_file)
@@ -71,7 +82,8 @@ function JavascriptLint()
 endfunction
 
 " sets the cursor line highlight color to the error highlight color 
-function s:SetCursorLineColor() 
+" FIXME: This doesn't work for me
+function! s:SetCursorLineColor() 
   " check for disabled cursor line
   if(!exists("g:jslint_highlight_color") || strlen(g:jslint_highlight_color) == 0) 
     return 
@@ -99,14 +111,14 @@ endfunction
 
 " Conditionally reverts the cursor line color based on the presence
 " of the quickfix window
-function s:MaybeClearCursorLineColor()
+function! s:MaybeClearCursorLineColor()
   if(exists("s:qfix_buffer") && s:qfix_buffer == bufnr("%"))
     call s:ClearCursorLineColor()
   endif
 endfunction
 
 " Reverts the cursor line color
-function s:ClearCursorLineColor()
+function! s:ClearCursorLineColor()
   " only revert if our highlight is currently enabled
   if(exists("s:highlight_on") && s:highlight_on) 
     let s:highlight_on = 0 
@@ -122,4 +134,3 @@ function s:ClearCursorLineColor()
     endif
   endif
 endfunction
-
